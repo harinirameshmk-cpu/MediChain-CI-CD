@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Pharmacy Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [ng-cloak] { display: none !important; }
+        .temp-warning-banner {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-card {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body ng-controller="PharmacyController">
+
+<!-- NAVBAR -->
+<header class="dashboard-navbar" ng-controller="NavbarController">
+    <div class="dashboard-logo">
+        <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+            <div class="dashboard-logo-icon">+</div>
+            <div>
+                <strong>MediChain</strong>
+                <small>Smart Medicine Supply Chain</small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-user">
+        <!-- Live Notifications Dropdown -->
+        <div style="position: relative; display: inline-block; margin-right: 15px;">
+            <button type="button" ng-click="toggleNotif($event)" style="background: rgba(25,118,210,0.08); border: 1px solid #d0e1fd; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; font-size: 16px;">
+                🔔
+                <span ng-if="unreadCount > 0" ng-cloak style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 10px; font-size: 11px; font-weight: bold; padding: 2px 6px;">{{unreadCount}}</span>
+            </button>
+            <div ng-if="showNotifDropdown" ng-cloak style="position: absolute; right: 0; top: 46px; width: 320px; background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; z-index: 1000; max-height: 360px; overflow-y: auto; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 13px;">Live Supply Chain Alerts</strong>
+                    <small style="color: #64748b; font-size: 11px;">Real-time</small>
+                </div>
+                <div ng-if="alerts.length === 0" style="text-align: center; color: #94a3b8; padding: 10px;">No new alerts.</div>
+                <div ng-repeat="a in alerts | limitTo:5" style="border-left: 3px solid #1976d2; padding: 6px 10px; margin-bottom: 8px; background: #f8fafc; border-radius: 4px;">
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px; font-size: 12px;">{{a.message}}</div>
+                    <div style="font-size: 10px; color: #94a3b8;">{{a.timestamp | dateTimeFormat}}</div>
+                </div>
+            </div>
+        </div>
+
+        <span>{{user.name}}</span>
+        <span class="role-badge">{{user.role | uppercaseText}}</span>
+        <button type="button" ng-click="logout()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:12px;">
+            Logout
+        </button>
+    </div>
+</header>
+
+<main class="manufacturer-container">
+    <section class="page-header">
+        <div>
+            <span class="page-tag">PHARMACY PORTAL</span>
+            <h1>Pharmacy Verification & Stock Intake</h1>
+            <p>Verify cold-chain compliance, inspect temperature history, and securely receive certified medicine batches.</p>
+        </div>
+    </section>
+
+    <!-- SUMMARY CARDS -->
+    <section class="manufacturer-summary">
+        <div class="summary-card">
+            <div class="summary-icon">🏥</div>
+            <div>
+                <small>Total Batches</small>
+                <h3>{{stats.total}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">✓</div>
+            <div>
+                <small>Valid Medicines</small>
+                <h3 style="color: #10b981;">{{stats.valid}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">⚠</div>
+            <div>
+                <small>Temperature Alerts</small>
+                <h3 style="color: #ef4444;">{{stats.alerts}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">⏳</div>
+            <div>
+                <small>Expiring Soon</small>
+                <h3 style="color: #f59e0b;">{{stats.expiringSoon}}</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACTION MESSAGES -->
+    <section ng-if="actionMessage" ng-cloak style="margin-bottom: 20px;">
+        <div ng-if="actionMessage.type === 'success'" style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 14px; border-radius: 8px;">
+            {{actionMessage.text}}
+        </div>
+        <div ng-if="actionMessage.type === 'warning'" style="background: #fffbeb; border: 1px solid #f59e0b; color: #92400e; padding: 14px; border-radius: 8px;">
+            {{actionMessage.text}}
+        </div>
+        <div ng-if="actionMessage.type === 'danger'" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 14px; border-radius: 8px;">
+            {{actionMessage.text}}
+        </div>
+    </section>
+
+    <!-- INCOMING MEDICINES TABLE -->
+    <section class="table-card" style="margin-top: 30px;">
+        <div class="table-header-flex">
+            <div>
+                <h2>Incoming & Stocked Batches</h2>
+                <p>Shipments routed to this pharmacy. Review temperature compliance before accepting.</p>
+            </div>
+            <div>
+                <input type="text" class="table-search" ng-model="searchText" placeholder="🔍 Search Batch / Medicine...">
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Medicine Name</th>
+                        <th>Manufacturer</th>
+                        <th>Safe Range</th>
+                        <th>Temperature Compliance</th>
+                        <th>Expiry Status</th>
+                        <th>Stage / Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-if="medicines.length === 0">
+                        <td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">No shipments currently routed to pharmacy.</td>
+                    </tr>
+                    <tr ng-repeat="m in medicines | filter:searchText">
+                        <td><strong>{{m.batchId}}</strong></td>
+                        <td>{{m.medicineName}}</td>
+                        <td>{{m.manufacturer}}</td>
+                        <td>{{m.minTemperature}}°C – {{m.maxTemperature}}°C</td>
+                        <td>
+                            <span ng-if="m.hasTemperatureAnomaly" style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:12px; font-weight:bold; font-size:11px; display:inline-block;">
+                                ⚠ TEMP ANOMALY
+                            </span>
+                            <span ng-if="!m.hasTemperatureAnomaly" style="background:#ecfdf5; color:#047857; padding:4px 10px; border-radius:12px; font-weight:bold; font-size:11px; display:inline-block;">
+                                ✓ SAFE TEMP
+                            </span>
+                        </td>
+                        <td>
+                            <span ng-if="m.isExpired" style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:bold;">
+                                EXPIRED
+                            </span>
+                            <span ng-if="!m.isExpired" style="color:#10b981; font-weight:bold; font-size:12px;">
+                                Valid ({{m.expiryDate}})
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size:12px; font-weight:bold; color:#334155;">{{m.status}}</span>
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button type="button" ng-click="openLogsModal(m)" style="background:#0284c7; color:white; border:none; padding:5px 10px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer;">
+                                    History
+                                </button>
+                                <button type="button" ng-if="m.status !== 'VERIFIED_AT_PHARMACY'" ng-click="acceptBatch(m.batchId)" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer;">
+                                    Accept Stock
+                                </button>
+                                <span ng-if="m.status === 'VERIFIED_AT_PHARMACY'" style="font-size:11px; color:#15803d; font-weight:bold; padding:5px 0;">
+                                    Accepted ✓
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- TEMPERATURE HISTORY MODAL -->
+    <div class="modal" ng-if="activeLogsModal" ng-cloak>
+        <div class="modal-card">
+            <h3 style="margin-bottom: 4px; color:#0f172a;">Batch {{selectedMedLogs.batchId}} - Full Audit History</h3>
+            <p style="font-size: 13px; color:#64748b; margin-bottom: 15px;">
+                {{selectedMedLogs.medicineName}} | Safe Range: {{selectedMedLogs.minTemperature}}°C – {{selectedMedLogs.maxTemperature}}°C
+            </p>
+
+            <!-- ANOMALY WARNING BANNER -->
+            <div ng-if="selectedMedLogs.hasTemperatureAnomaly" class="temp-warning-banner">
+                <span style="font-size: 18px;">⚠</span>
+                <div>
+                    <strong>TEMPERATURE WARNING:</strong><br>
+                    This medicine experienced a temperature condition outside the recommended storage range during transportation.
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; margin-bottom: 20px;">
+                <table class="data-table" style="font-size: 12px;">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Recorded Temp</th>
+                            <th>Allowed Range</th>
+                            <th>Status</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-if="!selectedMedLogs.shipment.temperatureHistory || selectedMedLogs.shipment.temperatureHistory.length === 0">
+                            <td colspan="5" style="text-align:center; padding:12px; color:#94a3b8;">No checkpoint readings logged for this batch.</td>
+                        </tr>
+                        <tr ng-repeat="log in selectedMedLogs.shipment.temperatureHistory">
+                            <td>{{log.timestamp | dateTimeFormat}}</td>
+                            <td>
+                                <strong ng-style="{'color': log.status === 'ANOMALY' ? '#ef4444' : '#10b981'}">
+                                    {{log.temperature}}°C
+                                </strong>
+                            </td>
+                            <td>{{selectedMedLogs.minTemperature}}°C – {{selectedMedLogs.maxTemperature}}°C</td>
+                            <td>
+                                <span ng-if="log.status === 'ANOMALY'" style="color:#b91c1c; font-weight:bold;">⚠ ANOMALY</span>
+                                <span ng-if="log.status !== 'ANOMALY'" style="color:#047857; font-weight:bold;">✓ NORMAL</span>
+                            </td>
+                            <td>{{log.location || '-'}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: right;">
+                <button type="button" ng-click="closeLogsModal()" style="background:#64748b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    Close History
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Scripts -->
+<script src="js/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/controllers.js"></script>
+
+</body>
+</html>

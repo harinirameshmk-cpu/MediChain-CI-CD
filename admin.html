@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Admin Dashboard & Blockchain Explorer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [ng-cloak] { display: none !important; }
+        .tab-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+        .tab-btn {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            color: #475569;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #1976d2;
+            color: white;
+            border-color: #1565c0;
+        }
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .filter-pill {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+        }
+        .filter-pill.active {
+            background: #0284c7;
+            color: white;
+            border-color: #0369a1;
+        }
+        .block-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .block-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .validation-banner {
+            padding: 14px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+        .val-valid {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .val-compromised {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body ng-controller="AdminController">
+
+<!-- NAVBAR -->
+<header class="dashboard-navbar" ng-controller="NavbarController">
+    <div class="dashboard-logo">
+        <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+            <div class="dashboard-logo-icon">+</div>
+            <div>
+                <strong>MediChain</strong>
+                <small>Smart Medicine Supply Chain</small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-user">
+        <!-- Live Notifications Dropdown -->
+        <div style="position: relative; display: inline-block; margin-right: 15px;">
+            <button type="button" ng-click="toggleNotif($event)" style="background: rgba(25,118,210,0.08); border: 1px solid #d0e1fd; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; font-size: 16px;">
+                🔔
+                <span ng-if="unreadCount > 0" ng-cloak style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 10px; font-size: 11px; font-weight: bold; padding: 2px 6px;">{{unreadCount}}</span>
+            </button>
+            <div ng-if="showNotifDropdown" ng-cloak style="position: absolute; right: 0; top: 46px; width: 320px; background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; z-index: 1000; max-height: 360px; overflow-y: auto; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 13px;">Live Supply Chain Alerts</strong>
+                    <small style="color: #64748b; font-size: 11px;">Real-time</small>
+                </div>
+                <div ng-if="alerts.length === 0" style="text-align: center; color: #94a3b8; padding: 10px;">No new alerts.</div>
+                <div ng-repeat="a in alerts | limitTo:5" style="border-left: 3px solid #1976d2; padding: 6px 10px; margin-bottom: 8px; background: #f8fafc; border-radius: 4px;">
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px; font-size: 12px;">{{a.message}}</div>
+                    <div style="font-size: 10px; color: #94a3b8;">{{a.timestamp | dateTimeFormat}}</div>
+                </div>
+            </div>
+        </div>
+
+        <span>{{user.name}}</span>
+        <span class="role-badge" style="background:#7c3aed; color:white;">ADMIN</span>
+        <button type="button" ng-click="logout()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:12px;">
+            Logout
+        </button>
+    </div>
+</header>
+
+<main class="manufacturer-container">
+    <section class="page-header">
+        <div>
+            <span class="page-tag">ADMINISTRATION & BLOCKCHAIN AUDIT</span>
+            <h1>End-to-End Supply Chain Governance</h1>
+            <p>Cryptographic ledger verification, complete multi-tier tracking, and real-time anomaly surveillance.</p>
+        </div>
+    </section>
+
+    <!-- METRIC CARDS -->
+    <section class="manufacturer-summary" style="grid-template-columns: repeat(6, 1fr);">
+        <div class="summary-card">
+            <div class="summary-icon">💊</div>
+            <div>
+                <small>Total Medicines</small>
+                <h3>{{stats.totalMedicines || 0}}</h3>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">📦</div>
+            <div>
+                <small>Total Shipments</small>
+                <h3>{{stats.totalShipments || 0}}</h3>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">🚚</div>
+            <div>
+                <small>Active Shipments</small>
+                <h3>{{stats.activeShipments || 0}}</h3>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">🏥</div>
+            <div>
+                <small>Delivered</small>
+                <h3 style="color:#10b981;">{{stats.delivered || 0}}</h3>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">⚠</div>
+            <div>
+                <small>Temp Anomalies</small>
+                <h3 style="color:#ef4444;">{{stats.temperatureAnomalies || 0}}</h3>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">⛓</div>
+            <div>
+                <small>Blockchain Blocks</small>
+                <h3 style="color:#7c3aed;">{{stats.blockchainTransactions || 0}}</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACTION NOTICE -->
+    <div ng-if="actionNotice" ng-cloak style="margin-bottom: 20px;">
+        <div ng-if="actionNotice.type === 'success'" style="background:#ecfdf5; border:1px solid #10b981; color:#065f46; padding:12px; border-radius:8px; font-weight:bold;">
+            {{actionNotice.text}}
+        </div>
+        <div ng-if="actionNotice.type === 'danger'" style="background:#fee2e2; border:1px solid #ef4444; color:#991b1b; padding:12px; border-radius:8px; font-weight:bold;">
+            {{actionNotice.text}}
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-btn-group">
+        <button type="button" class="tab-btn" ng-class="{'active': activeTab === 'medicines'}" ng-click="setTab('medicines')">
+            💊 All Medicines & Filters
+        </button>
+        <button type="button" class="tab-btn" ng-class="{'active': activeTab === 'blockchain'}" ng-click="setTab('blockchain')">
+            ⛓ Blockchain Explorer
+        </button>
+        <button type="button" class="tab-btn" ng-class="{'active': activeTab === 'shipments'}" ng-click="setTab('shipments')">
+            🚚 All Shipments
+        </button>
+        <button type="button" class="tab-btn" ng-class="{'active': activeTab === 'users'}" ng-click="setTab('users')">
+            👥 System Accounts
+        </button>
+    </div>
+
+    <!-- TAB 1: ALL MEDICINES & FILTER BAR -->
+    <section class="table-card" ng-if="activeTab === 'medicines'" ng-cloak>
+        <div class="table-header-flex">
+            <div>
+                <h2>Medicine Inventory & Quality Filters</h2>
+                <p>Filter by clinical condition and temperature compliance</p>
+            </div>
+        </div>
+
+        <!-- FILTER PILLS -->
+        <div class="filter-pills">
+            <button type="button" class="filter-pill" ng-class="{'active': filterStatus === 'ALL'}" ng-click="setFilter('ALL')">All Batches</button>
+            <button type="button" class="filter-pill" ng-class="{'active': filterStatus === 'NORMAL'}" ng-click="setFilter('NORMAL')">✓ Normal</button>
+            <button type="button" class="filter-pill" ng-class="{'active': filterStatus === 'ANOMALY'}" ng-click="setFilter('ANOMALY')">⚠ Temperature Anomaly</button>
+            <button type="button" class="filter-pill" ng-class="{'active': filterStatus === 'EXPIRED'}" ng-click="setFilter('EXPIRED')">⌛ Expired</button>
+            <button type="button" class="filter-pill" ng-class="{'active': filterStatus === 'IN_TRANSIT'}" ng-click="setFilter('IN_TRANSIT')">🚚 In Transit</button>
+            <button type="button" class="filter-pill" ng-class="{'active': filterStatus === 'DELIVERED'}" ng-click="setFilter('DELIVERED')">🏥 Delivered</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Medicine</th>
+                        <th>Manufacturer</th>
+                        <th>Quantity</th>
+                        <th>Safe Range</th>
+                        <th>Temp Status</th>
+                        <th>Expiry</th>
+                        <th>Stage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="m in medicines | filter:filterMedicinePredicate">
+                        <td><strong>{{m.batchId}}</strong></td>
+                        <td>{{m.medicineName}}</td>
+                        <td>{{m.manufacturer}}</td>
+                        <td>{{m.quantity | number}}</td>
+                        <td>{{m.minTemperature}}°C – {{m.maxTemperature}}°C</td>
+                        <td>
+                            <span ng-if="m.temperatureStatus === 'ANOMALY' || (m.shipment && m.shipment.temperatureStatus === 'ANOMALY')" style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:10px; font-weight:bold; font-size:11px;">
+                                ⚠ ANOMALY
+                            </span>
+                            <span ng-if="m.temperatureStatus !== 'ANOMALY' && (!m.shipment || m.shipment.temperatureStatus !== 'ANOMALY')" style="background:#ecfdf5; color:#047857; padding:3px 8px; border-radius:10px; font-weight:bold; font-size:11px;">
+                                ✓ NORMAL
+                            </span>
+                        </td>
+                        <td>
+                            <span ng-if="m.isExpired" style="color:#ef4444; font-weight:bold;">EXPIRED</span>
+                            <span ng-if="!m.isExpired">{{m.expiryDate}}</span>
+                        </td>
+                        <td>
+                            <span class="stage-badge" ng-class="m.currentStage | stageBadgeClass">{{m.currentStage}}</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- TAB 2: BLOCKCHAIN EXPLORER -->
+    <section class="table-card" ng-if="activeTab === 'blockchain'" ng-cloak>
+        <div class="table-header-flex">
+            <div>
+                <h2>MediChain Blockchain Ledger Explorer</h2>
+                <p>Verifiable cryptographic blocks with SHA-256 hash linkage</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button type="button" ng-click="validateBlockchain()" style="background:#10b981; color:white; border:none; padding:9px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    ✓ Validate Blockchain
+                </button>
+                <button type="button" ng-click="simulateTamper()" style="background:#ef4444; color:white; border:none; padding:9px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    🚨 Simulate Tamper
+                </button>
+                <button type="button" ng-click="restoreBlockchain()" style="background:#64748b; color:white; border:none; padding:9px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    ↺ Restore Clean Ledger
+                </button>
+            </div>
+        </div>
+
+        <!-- VALIDATION RESULT BANNER -->
+        <div ng-if="validationResult" class="validation-banner" ng-class="{'val-valid': validationResult.isValid, 'val-compromised': !validationResult.isValid}" ng-cloak>
+            <div>
+                <span ng-if="validationResult.isValid">✓ BLOCKCHAIN CRYPTOGRAPHICALLY VALID</span>
+                <span ng-if="!validationResult.isValid">🚨 BLOCKCHAIN INTEGRITY COMPROMISED!</span>
+                <div style="font-size: 12px; font-weight: normal; margin-top: 4px;">
+                    {{validationResult.message || validationResult.reason}}
+                </div>
+            </div>
+            <div style="font-size: 13px;">
+                Blocks Verified: {{blockchain.length}}
+            </div>
+        </div>
+
+        <!-- BLOCK LIST -->
+        <div>
+            <div class="block-card" ng-repeat="b in blockchain">
+                <div class="block-card-header">
+                    <div>
+                        <strong style="color:#0284c7; font-size:14px;">Block #{{b.index}}</strong>
+                        <span style="background:#f1f5f9; color:#334155; padding:2px 8px; border-radius:4px; margin-left:8px; font-weight:bold;">
+                            {{b.transactionType}}
+                        </span>
+                        <span style="color:#64748b; margin-left:8px;">Batch: {{b.batchId}}</span>
+                    </div>
+                    <span style="color:#64748b;">{{b.timestamp | dateTimeFormat}}</span>
+                </div>
+
+                <div style="margin-bottom: 6px; word-break: break-all;">
+                    <span style="color:#64748b;">Hash: </span>
+                    <strong style="color:#0f172a;">{{b.hash}}</strong>
+                </div>
+
+                <div style="margin-bottom: 8px; word-break: break-all;">
+                    <span style="color:#94a3b8;">Prev: </span>
+                    <span style="color:#64748b;">{{b.previousHash}}</span>
+                </div>
+
+                <div style="background:#f8fafc; padding:10px; border-radius:6px; color:#334155;">
+                    <small style="display:block; color:#64748b; margin-bottom:4px;">Transaction Payload Data:</small>
+                    <pre style="margin:0; font-family:monospace; font-size:11px; white-space:pre-wrap;">{{b.data | json}}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 3: ALL SHIPMENTS -->
+    <section class="table-card" ng-if="activeTab === 'shipments'" ng-cloak>
+        <h2>Shipment Logistics Registry</h2>
+        <div style="overflow-x: auto; margin-top: 15px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Transporter</th>
+                        <th>Vehicle</th>
+                        <th>Destination</th>
+                        <th>Last Temperature</th>
+                        <th>Temperature Status</th>
+                        <th>Shipment Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="s in shipments">
+                        <td><strong>{{s.batchId}}</strong></td>
+                        <td>{{s.transporter || 'ColdChain Express'}}</td>
+                        <td>{{s.vehicleNumber || 'TRK-COLD'}}</td>
+                        <td>{{s.destination || 'Hospital Pharmacy'}}</td>
+                        <td>
+                            <strong ng-style="{'color': s.temperatureStatus === 'ANOMALY' ? '#ef4444' : '#10b981'}">
+                                {{s.temperature !== null ? s.temperature + '°C' : '-'}}
+                            </strong>
+                        </td>
+                        <td>
+                            <span ng-if="s.temperatureStatus === 'ANOMALY'" style="color:#ef4444; font-weight:bold;">⚠ ANOMALY</span>
+                            <span ng-if="s.temperatureStatus !== 'ANOMALY'" style="color:#10b981; font-weight:bold;">✓ NORMAL</span>
+                        </td>
+                        <td>{{s.status}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- TAB 4: USERS -->
+    <section class="table-card" ng-if="activeTab === 'users'" ng-cloak>
+        <h2>System Role Accounts</h2>
+        <div style="overflow-x: auto; margin-top: 15px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name / Org</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Registered Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="u in users">
+                        <td><strong>{{u.name}}</strong></td>
+                        <td>{{u.email}}</td>
+                        <td><span class="role-badge">{{u.role | uppercaseText}}</span></td>
+                        <td>{{u.createdAt | dateTimeFormat}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Scripts -->
+<script src="js/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/controllers.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [ng-cloak] { display: none !important; }
+        .demo-roles-bar {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+            text-align: center;
+        }
+        .demo-roles-bar small {
+            display: block;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .demo-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+        .demo-pill {
+            background: #f1f5f9;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .demo-pill:hover {
+            background: #dbeafe;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+
+<body ng-controller="LoginController">
+
+<header class="auth-navbar">
+    <a href="index.html" class="auth-logo">
+        <div class="auth-logo-icon">+</div>
+        <div>
+            <strong>MediChain</strong>
+            <small>Smart Medicine Supply Chain</small>
+        </div>
+    </a>
+
+    <div class="auth-nav-right">
+        <span>Don't have an account?</span>
+        <a href="register.html" class="auth-nav-register">Register</a>
+    </div>
+</header>
+
+<main class="login-main">
+    <section class="login-info">
+        <span class="login-tag">BLOCKCHAIN POWERED</span>
+        <h1>
+            Secure Medicine<br>
+            <span>Supply Chain</span>
+        </h1>
+        <p>
+            Track, verify and secure medicines throughout the entire supply chain using blockchain technology.
+        </p>
+    </section>
+
+    <section class="login-form-area">
+        <div class="login-card">
+            <div class="login-heading">
+                <div class="login-user-icon">🔐</div>
+                <h2>Welcome Back</h2>
+                <p>Login to your MediChain account</p>
+            </div>
+
+            <form ng-submit="handleLogin()" novalidate>
+                <!-- EMAIL -->
+                <div class="login-input">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" ng-model="credentials.email" placeholder="Enter your email" required autocomplete="email">
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="login-input">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" ng-model="credentials.password" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+
+                <!-- ROLE -->
+                <div class="login-input">
+                    <label for="loginRole">Login As</label>
+                    <select id="loginRole" ng-model="credentials.role" required>
+                        <option value="">Select Your Role</option>
+                        <option value="manufacturer">Manufacturer</option>
+                        <option value="distributor">Distributor</option>
+                        <option value="transporter">Transporter</option>
+                        <option value="pharmacy">Pharmacy</option>
+                        <option value="customer">Customer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <!-- MESSAGES -->
+                <div class="success-message" ng-if="successMessage" ng-cloak>
+                    {{successMessage}}
+                </div>
+                <div class="error-message" ng-if="errorMessage" ng-cloak>
+                    {{errorMessage}}
+                </div>
+
+                <button type="submit" id="loginBtn" class="login-button" ng-disabled="isLoading">
+                    <span ng-if="!isLoading">Login to Dashboard →</span>
+                    <span ng-if="isLoading" ng-cloak>Authenticating...</span>
+                </button>
+
+                <div class="login-register-link">
+                    Don't have an account?
+                    <a href="register.html">Create Account</a>
+                </div>
+
+                <!-- QUICK FILL FOR EVALUATION / DEMO -->
+                <div class="demo-roles-bar">
+                    <small>⚡ Quick Fill Demo Accounts:</small>
+                    <div class="demo-pills">
+                        <button type="button" class="demo-pill" ng-click="fillDemo('manufacturer')">Manufacturer</button>
+                        <button type="button" class="demo-pill" ng-click="fillDemo('distributor')">Distributor</button>
+                        <button type="button" class="demo-pill" ng-click="fillDemo('transporter')">Transporter</button>
+                        <button type="button" class="demo-pill" ng-click="fillDemo('pharmacy')">Pharmacy</button>
+                        <button type="button" class="demo-pill" ng-click="fillDemo('customer')">Customer</button>
+                        <button type="button" class="demo-pill" ng-click="fillDemo('admin')">Admin</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer class="auth-footer">
+    <span>© 2026 MediChain</span>
+    <span>Secure • Transparent • Traceable</span>
+</footer>
+
+<!-- AngularJS Framework & Scripts -->
+<script src="js/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/controllers.js"></script>
+
+</body>
+</html>

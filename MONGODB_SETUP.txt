@@ -1,0 +1,11 @@
+MediChain MongoDB setup
+
+This version does NOT use mongodb+srv. It uses the three Atlas hosts directly, avoiding the Node.js SRV DNS error seen on the TCE network.
+
+1. In .env replace MONGODB_PASSWORD=CHANGE_ME with your CURRENT Atlas database-user password.
+2. Use the database username shown in Atlas.
+3. Atlas Network Access must allow this computer (for testing, 0.0.0.0/0 can be used temporarily).
+4. Run: npm install
+5. Run: npm start
+
+If you previously exposed a database password, change it in Atlas before using it again.

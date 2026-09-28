@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Transporter Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [ng-cloak] { display: none !important; }
+        .temp-alert-preview {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .temp-alert-normal {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .temp-alert-anomaly {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .shipment-details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        .shipment-details-grid small {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+        .shipment-details-grid strong {
+            color: #1e293b;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body ng-controller="TransporterController">
+
+<!-- NAVBAR -->
+<header class="dashboard-navbar" ng-controller="NavbarController">
+    <div class="dashboard-logo">
+        <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+            <div class="dashboard-logo-icon">+</div>
+            <div>
+                <strong>MediChain</strong>
+                <small>Smart Medicine Supply Chain</small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-user">
+        <!-- Live Notifications Dropdown -->
+        <div style="position: relative; display: inline-block; margin-right: 15px;">
+            <button type="button" ng-click="toggleNotif($event)" style="background: rgba(25,118,210,0.08); border: 1px solid #d0e1fd; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; font-size: 16px;">
+                🔔
+                <span ng-if="unreadCount > 0" ng-cloak style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 10px; font-size: 11px; font-weight: bold; padding: 2px 6px;">{{unreadCount}}</span>
+            </button>
+            <div ng-if="showNotifDropdown" ng-cloak style="position: absolute; right: 0; top: 46px; width: 320px; background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; z-index: 1000; max-height: 360px; overflow-y: auto; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 13px;">Live Supply Chain Alerts</strong>
+                    <small style="color: #64748b; font-size: 11px;">Real-time</small>
+                </div>
+                <div ng-if="alerts.length === 0" style="text-align: center; color: #94a3b8; padding: 10px;">No new alerts.</div>
+                <div ng-repeat="a in alerts | limitTo:5" style="border-left: 3px solid #1976d2; padding: 6px 10px; margin-bottom: 8px; background: #f8fafc; border-radius: 4px;">
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px; font-size: 12px;">{{a.message}}</div>
+                    <div style="font-size: 10px; color: #94a3b8;">{{a.timestamp | dateTimeFormat}}</div>
+                </div>
+            </div>
+        </div>
+
+        <span>{{user.name}}</span>
+        <span class="role-badge">{{user.role | uppercaseText}}</span>
+        <button type="button" ng-click="logout()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:12px;">
+            Logout
+        </button>
+    </div>
+</header>
+
+<main class="manufacturer-container">
+    <section class="page-header">
+        <div>
+            <span class="page-tag">TRANSPORTER PORTAL</span>
+            <h1>Cold-Chain Logistics & Temperature Monitoring</h1>
+            <p>Log IoT temperature checkpoints directly to the immutable blockchain ledger and deliver to pharmacies.</p>
+        </div>
+    </section>
+
+    <!-- DASHBOARD SUMMARY CARDS -->
+    <section class="manufacturer-summary">
+        <div class="summary-card">
+            <div class="summary-icon">🚚</div>
+            <div>
+                <small>Active Shipments</small>
+                <h3>{{stats.active}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">❄️</div>
+            <div>
+                <small>Normal Temperature</small>
+                <h3 style="color: #10b981;">{{stats.normal}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">⚠</div>
+            <div>
+                <small>Temperature Alerts</small>
+                <h3 style="color: #ef4444;">{{stats.alerts}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">🏥</div>
+            <div>
+                <small>Delivered</small>
+                <h3>{{stats.delivered}}</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACTION MESSAGES -->
+    <section ng-if="actionMessage" ng-cloak style="margin-bottom: 20px;">
+        <div ng-if="actionMessage.type === 'success'" style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 14px; border-radius: 8px;">
+            {{actionMessage.text}}
+        </div>
+        <div ng-if="actionMessage.type === 'warning'" style="background: #fffbeb; border: 1px solid #f59e0b; color: #92400e; padding: 14px; border-radius: 8px;">
+            {{actionMessage.text}}
+        </div>
+        <div ng-if="actionMessage.type === 'danger'" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 14px; border-radius: 8px;">
+            {{actionMessage.text}}
+        </div>
+    </section>
+
+    <!-- CHECKPOINT RECORDING CARD -->
+    <section class="form-card">
+        <h2>Log Transportation Checkpoint</h2>
+        <p class="form-subtitle">Every recorded temperature checkpoint commits a <code>TRANSPORT_TEMPERATURE_CHECK</code> block to the blockchain.</p>
+
+        <!-- BATCH SELECTION DROPDOWN -->
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="selectBatch">Select Medicine Batch *</label>
+            <select id="selectBatch" ng-model="selectedBatchId" ng-change="onSelectBatch()" style="font-weight: bold; font-size: 15px;">
+                <option value="">-- Choose Dispatched Batch --</option>
+                <option ng-repeat="s in shipments" value="{{s.batchId}}">
+                    {{s.batchId}} - {{s.medicine.medicineName}} (Status: {{s.status}})
+                </option>
+            </select>
+        </div>
+
+        <!-- AUTOMATICALLY DISPLAYED MEDICINE DETAILS -->
+        <div class="shipment-details-grid" ng-if="selectedShipment" ng-cloak>
+            <div>
+                <small>Medicine Name</small>
+                <strong>{{selectedShipment.medicine.medicineName || '-'}}</strong>
+            </div>
+            <div>
+                <small>Manufacturer</small>
+                <strong>{{selectedShipment.medicine.manufacturer || '-'}}</strong>
+            </div>
+            <div>
+                <small>Batch Quantity</small>
+                <strong>{{selectedShipment.medicine.quantity | number}} units</strong>
+            </div>
+            <div>
+                <small>Expiry Date</small>
+                <strong>{{selectedShipment.medicine.expiryDate || '-'}}</strong>
+            </div>
+            <div>
+                <small>Allowed Storage Range (Manufacturer Standard)</small>
+                <strong style="color: #0284c7;">{{selectedShipment.medicine.minTemperature}}°C – {{selectedShipment.medicine.maxTemperature}}°C</strong>
+            </div>
+            <div>
+                <small>Destination</small>
+                <strong>{{selectedShipment.destination || 'Hospital Pharmacy'}}</strong>
+            </div>
+        </div>
+
+        <form ng-submit="recordCheckpoint()" novalidate ng-if="selectedShipment" ng-cloak>
+            <div class="form-grid">
+                <!-- Temperature Reading Input -->
+                <div class="form-group">
+                    <label for="currentTemperature">Current Sensor Temperature (°C) *</label>
+                    <input type="number" step="0.1" id="currentTemperature" ng-model="checkpoint.currentTemperature" ng-change="evalTemperature()" placeholder="e.g. 5.0 or 10.5" required>
+                    <small>Enter measured reading inside refrigerated container</small>
+                </div>
+
+                <!-- Checkpoint Location -->
+                <div class="form-group">
+                    <label for="location">Current Checkpoint Location</label>
+                    <input type="text" id="location" ng-model="checkpoint.location" placeholder="e.g. Toll Checkpoint North / State Highway 9">
+                </div>
+
+                <!-- Vehicle Number -->
+                <div class="form-group">
+                    <label for="vehicleNumber">Vehicle Number</label>
+                    <input type="text" id="vehicleNumber" ng-model="checkpoint.vehicleNumber" placeholder="e.g. TRK-COLD-8821">
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label for="notes">Transit Notes / Compressor Status</label>
+                    <input type="text" id="notes" ng-model="checkpoint.notes" placeholder="e.g. Routine transit inspection">
+                </div>
+            </div>
+
+            <!-- REAL-TIME TEMPERATURE STATUS PREVIEW -->
+            <div ng-if="tempStatusPreview" ng-cloak>
+                <div ng-if="tempStatusPreview.status === 'NORMAL'" class="temp-alert-preview temp-alert-normal">
+                    <span>✓</span>
+                    <span>{{tempStatusPreview.message}}</span>
+                </div>
+                <div ng-if="tempStatusPreview.status === 'ANOMALY'" class="temp-alert-preview temp-alert-anomaly">
+                    <span>⚠</span>
+                    <span>{{tempStatusPreview.message}} (Will be permanently committed to blockchain!)</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="submit" class="submit-btn" ng-disabled="isSaving">
+                    <span ng-if="!isSaving">Record Checkpoint to Blockchain →</span>
+                    <span ng-if="isSaving" ng-cloak>Recording Block...</span>
+                </button>
+                <button type="button" ng-click="deliverShipment()" style="background:#10b981; color:white; border:none; padding:12px 22px; border-radius:8px; font-weight:bold; cursor:pointer;" ng-disabled="isSaving || selectedShipment.status === 'DELIVERED'">
+                    <span ng-if="selectedShipment.status !== 'DELIVERED'">Mark as Delivered to Pharmacy ✓</span>
+                    <span ng-if="selectedShipment.status === 'DELIVERED'">Already Delivered</span>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- CHECKPOINT HISTORY TABLE FOR SELECTED BATCH -->
+    <section class="table-card" style="margin-top: 30px;" ng-if="selectedShipment" ng-cloak>
+        <div class="table-header-flex">
+            <div>
+                <h2>Temperature History for Batch {{selectedShipment.batchId}}</h2>
+                <p>Verifiable checkpoint log retrieved from supply chain records</p>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Recorded Temperature</th>
+                        <th>Allowed Safe Range</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Vehicle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-if="!selectedShipment.temperatureHistory || selectedShipment.temperatureHistory.length === 0">
+                        <td colspan="6" style="text-align:center; padding:15px; color:#94a3b8;">No checkpoint readings logged yet for this batch.</td>
+                    </tr>
+                    <tr ng-repeat="log in selectedShipment.temperatureHistory">
+                        <td>{{log.timestamp | dateTimeFormat}}</td>
+                        <td>
+                            <strong style="font-size:14px;" ng-style="{'color': log.status === 'ANOMALY' ? '#ef4444' : '#10b981'}">
+                                {{log.temperature}}°C
+                            </strong>
+                        </td>
+                        <td>{{selectedShipment.medicine.minTemperature}}°C – {{selectedShipment.medicine.maxTemperature}}°C</td>
+                        <td>
+                            <span ng-if="log.status === 'ANOMALY'" style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">
+                                ⚠ ANOMALY
+                            </span>
+                            <span ng-if="log.status !== 'ANOMALY'" style="background:#ecfdf5; color:#047857; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">
+                                ✓ NORMAL
+                            </span>
+                        </td>
+                        <td>{{log.location || '-'}}</td>
+                        <td>{{log.vehicleNumber || '-'}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Scripts -->
+<script src="js/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/controllers.js"></script>
+
+</body>
+</html>

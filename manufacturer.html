@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Manufacturer Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [ng-cloak] { display: none !important; }
+        .temp-range-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .stage-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .stage-manufacturer { background: #e0f2fe; color: #0369a1; }
+        .stage-distributor { background: #fef3c7; color: #b45309; }
+        .stage-transporter { background: #e0e7ff; color: #4338ca; }
+        .stage-pharmacy { background: #dcfce7; color: #15803d; }
+        .qr-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-card {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        }
+        .qr-card img {
+            margin: 15px 0;
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body ng-controller="ManufacturerController">
+
+<!-- NAVBAR -->
+<header class="dashboard-navbar" ng-controller="NavbarController">
+    <div class="dashboard-logo">
+        <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+            <div class="dashboard-logo-icon">+</div>
+            <div>
+                <strong>MediChain</strong>
+                <small>Smart Medicine Supply Chain</small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-user">
+        <!-- Live Notifications Dropdown -->
+        <div style="position: relative; display: inline-block; margin-right: 15px;">
+            <button type="button" ng-click="toggleNotif($event)" style="background: rgba(25,118,210,0.08); border: 1px solid #d0e1fd; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; font-size: 16px;">
+                🔔
+                <span ng-if="unreadCount > 0" ng-cloak style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 10px; font-size: 11px; font-weight: bold; padding: 2px 6px;">{{unreadCount}}</span>
+            </button>
+            <div ng-if="showNotifDropdown" ng-cloak style="position: absolute; right: 0; top: 46px; width: 320px; background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; z-index: 1000; max-height: 360px; overflow-y: auto; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 13px;">Live Supply Chain Alerts</strong>
+                    <small style="color: #64748b; font-size: 11px;">Real-time</small>
+                </div>
+                <div ng-if="alerts.length === 0" style="text-align: center; color: #94a3b8; padding: 10px;">No new alerts.</div>
+                <div ng-repeat="a in alerts | limitTo:5" style="border-left: 3px solid #1976d2; padding: 6px 10px; margin-bottom: 8px; background: #f8fafc; border-radius: 4px;">
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px; font-size: 12px;">{{a.message}}</div>
+                    <div style="font-size: 10px; color: #94a3b8;">{{a.timestamp | dateTimeFormat}}</div>
+                </div>
+            </div>
+        </div>
+
+        <span>{{user.name}}</span>
+        <span class="role-badge">{{user.role | uppercaseText}}</span>
+        <button type="button" ng-click="logout()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:12px;">
+            Logout
+        </button>
+    </div>
+</header>
+
+<main class="manufacturer-container">
+    <!-- PAGE HEADER -->
+    <section class="page-header">
+        <div>
+            <span class="page-tag">MANUFACTURER PORTAL</span>
+            <h1>Medicine Batch Registration</h1>
+            <p>Register new medicine batches and generate verifiable SHA-256 blockchain origin transactions.</p>
+        </div>
+    </section>
+
+    <!-- NOTIFICATION / MINED STATUS -->
+    <section ng-if="alertInfo" ng-cloak style="margin-bottom: 20px;">
+        <div ng-if="alertInfo.type === 'success'" style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 16px; border-radius: 8px;">
+            <div style="font-weight: bold; font-size: 15px; margin-bottom: 4px;">{{alertInfo.title}}</div>
+            <div style="font-size: 13px;">✓ Blockchain Transaction Created (Block #{{alertInfo.blockIndex}})</div>
+            <div style="font-family: monospace; font-size: 11px; margin-top: 4px; color: #047857;">Block Hash: {{alertInfo.hash}}</div>
+        </div>
+        <div ng-if="alertInfo.type === 'danger'" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px; border-radius: 8px;">
+            <div style="font-weight: bold;">{{alertInfo.title}}</div>
+            <div style="font-size: 13px;">{{alertInfo.message}}</div>
+        </div>
+    </section>
+
+    <!-- FORM CARD -->
+    <section class="form-card">
+        <h2>Register New Medicine Batch</h2>
+        <p class="form-subtitle">The temperature bounds specified here define the immutable safe storage criteria on the blockchain.</p>
+
+        <form ng-submit="registerMedicine()" novalidate>
+            <div class="form-grid">
+                <!-- Batch ID -->
+                <div class="form-group">
+                    <label for="batchId">Batch ID *</label>
+                    <input type="text" id="batchId" ng-model="newMed.batchId" placeholder="e.g. MED001" required>
+                    <small>Unique identifier tracked across the supply chain</small>
+                </div>
+
+                <!-- Medicine Name -->
+                <div class="form-group">
+                    <label for="medicineName">Medicine Name *</label>
+                    <input type="text" id="medicineName" ng-model="newMed.medicineName" placeholder="e.g. Paracetamol 500mg" required>
+                </div>
+
+                <!-- Medicine Type -->
+                <div class="form-group">
+                    <label for="medicineType">Medicine Type</label>
+                    <select id="medicineType" ng-model="newMed.medicineType">
+                        <option value="Tablet">Tablet / Capsule</option>
+                        <option value="Vaccine">Vaccine (Cold-Chain)</option>
+                        <option value="Insulin">Insulin (Refrigerated)</option>
+                        <option value="Antibiotic">Antibiotic Injectable</option>
+                        <option value="Syrup">Oral Liquid / Syrup</option>
+                    </select>
+                </div>
+
+                <!-- Quantity -->
+                <div class="form-group">
+                    <label for="quantity">Quantity (Units) *</label>
+                    <input type="number" id="quantity" ng-model="newMed.quantity" min="1" required>
+                </div>
+
+                <!-- Mfg Date -->
+                <div class="form-group">
+                    <label for="manufacturingDate">Manufacturing Date *</label>
+                    <input type="date" id="manufacturingDate" ng-model="newMed.manufacturingDate" required>
+                </div>
+
+                <!-- Expiry Date -->
+                <div class="form-group">
+                    <label for="expiryDate">Expiry Date *</label>
+                    <input type="date" id="expiryDate" ng-model="newMed.expiryDate" required>
+                </div>
+            </div>
+
+            <!-- TEMPERATURE BOUNDS -->
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Storage Temperature Safe Range (°C) *</label>
+                <div class="temp-range-inputs">
+                    <div>
+                        <input type="number" step="0.5" id="minTemperature" ng-model="newMed.minTemperature" placeholder="Min Temp (e.g. 2)" required>
+                        <small>Allowed Minimum Storage Temp (°C)</small>
+                    </div>
+                    <div>
+                        <input type="number" step="0.5" id="maxTemperature" ng-model="newMed.maxTemperature" placeholder="Max Temp (e.g. 8)" required>
+                        <small>Allowed Maximum Storage Temp (°C)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Certificate -->
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="certificate">Quality Assurance Certificate / QA Batch Code</label>
+                <input type="text" id="certificate" ng-model="newMed.certificate" placeholder="e.g. QA-CERT-ISO9001-PASS">
+            </div>
+
+            <!-- Description -->
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="description">Batch Description & Storage Handling Notes</label>
+                <textarea id="description" ng-model="newMed.description" rows="2" placeholder="Specific handling instructions for distributors and cold-chain transporters..."></textarea>
+            </div>
+
+            <div style="margin-top: 25px; text-align: right;">
+                <button type="submit" class="submit-btn" ng-disabled="isMining">
+                    <span ng-if="!isMining">Register Medicine & Mine Block →</span>
+                    <span ng-if="isMining" ng-cloak>Mining Transaction to Blockchain...</span>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- REGISTERED MEDICINES TABLE -->
+    <section class="table-card" style="margin-top: 30px;">
+        <div class="table-header-flex">
+            <div>
+                <h2>Registered Batches</h2>
+                <p>Batches created by your manufacturing organization and committed to the blockchain</p>
+            </div>
+            <div>
+                <input type="text" class="table-search" ng-model="searchText" placeholder="🔍 Search Batch ID / Name...">
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Medicine Name</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Safe Range</th>
+                        <th>Expiry Date</th>
+                        <th>Current Stage</th>
+                        <th>Blockchain Block</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-if="medicines.length === 0">
+                        <td colspan="9" style="text-align:center; padding:20px; color:#94a3b8;">No medicines registered yet. Fill out the form above to register your first batch.</td>
+                    </tr>
+                    <tr ng-repeat="m in medicines | filter:searchText">
+                        <td><strong>{{m.batchId}}</strong></td>
+                        <td>{{m.medicineName}}</td>
+                        <td>{{m.medicineType}}</td>
+                        <td>{{m.quantity | number}}</td>
+                        <td>
+                            <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 12px;">
+                                {{m.minTemperature}}°C – {{m.maxTemperature}}°C
+                            </span>
+                        </td>
+                        <td>{{m.expiryDate}}</td>
+                        <td>
+                            <span class="stage-badge" ng-class="m.currentStage | stageBadgeClass">{{m.currentStage}}</span>
+                        </td>
+                        <td>
+                            <span style="font-family: monospace; font-size: 11px; background: #f1f5f9; padding: 3px 6px; border-radius: 4px;" title="{{m.blockchainHash}}">
+                                Block #{{m.blockchainBlockIndex}}
+                            </span>
+                        </td>
+                        <td>
+                            <button type="button" ng-click="showQrModal(m)" style="background:#1976d2; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                QR Code
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- QR CODE MODAL -->
+    <div class="qr-modal" ng-if="activeQrModal" ng-cloak>
+        <div class="qr-card">
+            <h3 style="margin-bottom: 5px; color: #0f172a;">{{selectedQrMed.medicineName}} ({{selectedQrMed.batchId}})</h3>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Official MediChain Verification QR</p>
+            <img ng-src="{{qrCodeUrl}}" alt="QR Code" width="180" height="180">
+            <p style="font-size: 13px; font-weight: bold; color: #1e293b; margin-bottom: 15px;">Batch ID: {{selectedQrMed.batchId}}</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <a ng-href="{{qrVerifyUrl}}" target="_blank" style="background:#10b981; color:white; text-decoration:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:bold;">
+                    Open Verification Page
+                </a>
+                <button type="button" ng-click="closeQrModal()" style="background:#94a3b8; color:white; border:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Scripts -->
+<script src="js/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/controllers.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "medichain",
+  "version": "1.0.0",
+  "description": "MediChain - Blockchain-Based Smart Medicine Supply Chain Management System",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "node backend/test-flow.js"
+  },
+  "dependencies": {
+    "angular": "^1.8.3",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.0"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2"
+  }
+}

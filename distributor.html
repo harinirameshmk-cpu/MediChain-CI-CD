@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Distributor Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [ng-cloak] { display: none !important; }
+        .stage-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .stage-manufacturer { background: #e0f2fe; color: #0369a1; }
+        .stage-distributor { background: #fef3c7; color: #b45309; }
+        .stage-transporter { background: #e0e7ff; color: #4338ca; }
+        .stage-pharmacy { background: #dcfce7; color: #15803d; }
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-card {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        }
+    </style>
+</head>
+
+<body ng-controller="DistributorController">
+
+<!-- NAVBAR -->
+<header class="dashboard-navbar" ng-controller="NavbarController">
+    <div class="dashboard-logo">
+        <a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+            <div class="dashboard-logo-icon">+</div>
+            <div>
+                <strong>MediChain</strong>
+                <small>Smart Medicine Supply Chain</small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-user">
+        <!-- Live Notifications Dropdown -->
+        <div style="position: relative; display: inline-block; margin-right: 15px;">
+            <button type="button" ng-click="toggleNotif($event)" style="background: rgba(25,118,210,0.08); border: 1px solid #d0e1fd; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; font-size: 16px;">
+                🔔
+                <span ng-if="unreadCount > 0" ng-cloak style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 10px; font-size: 11px; font-weight: bold; padding: 2px 6px;">{{unreadCount}}</span>
+            </button>
+            <div ng-if="showNotifDropdown" ng-cloak style="position: absolute; right: 0; top: 46px; width: 320px; background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; z-index: 1000; max-height: 360px; overflow-y: auto; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 13px;">Live Supply Chain Alerts</strong>
+                    <small style="color: #64748b; font-size: 11px;">Real-time</small>
+                </div>
+                <div ng-if="alerts.length === 0" style="text-align: center; color: #94a3b8; padding: 10px;">No new alerts.</div>
+                <div ng-repeat="a in alerts | limitTo:5" style="border-left: 3px solid #1976d2; padding: 6px 10px; margin-bottom: 8px; background: #f8fafc; border-radius: 4px;">
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px; font-size: 12px;">{{a.message}}</div>
+                    <div style="font-size: 10px; color: #94a3b8;">{{a.timestamp | dateTimeFormat}}</div>
+                </div>
+            </div>
+        </div>
+
+        <span>{{user.name}}</span>
+        <span class="role-badge">{{user.role | uppercaseText}}</span>
+        <button type="button" ng-click="logout()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:12px;">
+            Logout
+        </button>
+    </div>
+</header>
+
+<main class="manufacturer-container">
+    <section class="page-header">
+        <div>
+            <span class="page-tag">DISTRIBUTOR PORTAL</span>
+            <h1>Medicine Distribution Hub</h1>
+            <p>Receive registered batches from manufacturers, verify blockchain origin records, and dispatch to certified cold-chain transporters.</p>
+        </div>
+    </section>
+
+    <!-- DASHBOARD SUMMARY CARDS -->
+    <section class="manufacturer-summary">
+        <div class="summary-card">
+            <div class="summary-icon">📦</div>
+            <div>
+                <small>Total Batches</small>
+                <h3>{{stats.total}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">🏢</div>
+            <div>
+                <small>Ready for Dispatch</small>
+                <h3>{{stats.ready}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">🚚</div>
+            <div>
+                <small>In Transit</small>
+                <h3>{{stats.inTransit}}</h3>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">⚠</div>
+            <div>
+                <small>Alerts / Mismatches</small>
+                <h3 style="color: #ef4444;">{{stats.alerts}}</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- BATCHES TABLE -->
+    <section class="table-card" style="margin-top: 30px;">
+        <div class="table-header-flex">
+            <div>
+                <h2>Supply Chain Batches</h2>
+                <p>Verify provenance and manage distribution dispatch</p>
+            </div>
+            <div>
+                <input type="text" class="table-search" ng-model="searchText" placeholder="🔍 Search Batch / Medicine...">
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Medicine Name</th>
+                        <th>Manufacturer</th>
+                        <th>Quantity</th>
+                        <th>Allowed Range</th>
+                        <th>Stage</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-if="batches.length === 0">
+                        <td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">No batches currently in the distribution ledger.</td>
+                    </tr>
+                    <tr ng-repeat="b in batches | filter:searchText">
+                        <td><strong>{{b.batchId}}</strong></td>
+                        <td>{{b.medicineName}}</td>
+                        <td>{{b.manufacturer}}</td>
+                        <td>{{b.quantity | number}}</td>
+                        <td>
+                            <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:10px; font-weight:bold; font-size:12px;">
+                                {{b.minTemperature}}°C – {{b.maxTemperature}}°C
+                            </span>
+                        </td>
+                        <td>
+                            <span class="stage-badge" ng-class="b.currentStage | stageBadgeClass">{{b.currentStage}}</span>
+                        </td>
+                        <td>
+                            <span ng-if="b.temperatureStatus === 'ANOMALY'" style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:bold;">
+                                ⚠ TEMP ANOMALY
+                            </span>
+                            <span ng-if="b.temperatureStatus !== 'ANOMALY'" style="background:#ecfdf5; color:#047857; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:bold;">
+                                {{b.status}}
+                            </span>
+                        </td>
+                        <td>
+                            <!-- If newly registered at manufacturer -->
+                            <button type="button" ng-if="b.currentStage === 'MANUFACTURER' || b.status === 'REGISTERED'" ng-click="openReceiveModal(b)" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                Receive Batch
+                            </button>
+
+                            <!-- If received by distributor and ready to dispatch -->
+                            <button type="button" ng-if="b.status === 'RECEIVED_BY_DISTRIBUTOR' || (b.shipment && b.shipment.status === 'READY_FOR_DISPATCH')" ng-click="openDispatchModal(b)" style="background:#1976d2; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                Dispatch to Transporter
+                            </button>
+
+                            <!-- If already in transit or delivered -->
+                            <span ng-if="b.currentStage === 'TRANSPORTER' || b.currentStage === 'PHARMACY'" style="font-size:12px; color:#64748b; font-weight:600;">
+                                Dispatched ✓
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- RECEIVE MODAL WITH BLOCKCHAIN MISMATCH DETECTION -->
+    <div class="modal" ng-if="receiveModal.visible" ng-cloak>
+        <div class="modal-card">
+            <h3 style="margin-bottom: 6px; color:#0f172a;">Receive Medicine Batch</h3>
+            <p style="font-size: 13px; color:#64748b; margin-bottom: 20px;">
+                Confirm receipt of Batch <strong>{{receiveModal.batch.batchId}}</strong> ({{receiveModal.batch.medicineName}}).
+            </p>
+
+            <!-- BLOCKCHAIN DATA MISMATCH ALERT -->
+            <div ng-if="receiveModal.mismatchAlert" ng-cloak style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 14px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;">
+                <div style="font-weight: bold; margin-bottom: 4px;">🚨 BLOCKCHAIN DATA MISMATCH</div>
+                <div>{{receiveModal.error}}</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Registered Manufacturer Quantity</label>
+                <input type="text" value="{{receiveModal.batch.quantity}} units" disabled style="background: #f1f5f9; color: #475569;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Physically Received Quantity *</label>
+                <input type="number" ng-model="receiveModal.receivedQuantity" required>
+                <small style="color: #64748b;">Must match original blockchain record exactly.</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Warehouse Storage Location</label>
+                <input type="text" ng-model="receiveModal.warehouseLocation" placeholder="e.g. Central Cold Storage Bay 4">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" ng-click="closeReceiveModal()" style="background:#94a3b8; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    Cancel
+                </button>
+                <button type="button" ng-click="confirmReceive()" style="background:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    Verify & Confirm Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DISPATCH MODAL -->
+    <div class="modal" ng-if="dispatchModal.visible" ng-cloak>
+        <div class="modal-card">
+            <h3 style="margin-bottom: 6px; color:#0f172a;">Dispatch to Transporter</h3>
+            <p style="font-size: 13px; color:#64748b; margin-bottom: 20px;">
+                Assign cold-chain shipment for Batch <strong>{{dispatchModal.batch.batchId}}</strong>.
+            </p>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Transport Logistics Company *</label>
+                <input type="text" ng-model="dispatchModal.transporter" placeholder="e.g. ColdChain Express Ltd" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Refrigerated Vehicle Number *</label>
+                <input type="text" ng-model="dispatchModal.vehicleNumber" placeholder="e.g. TRK-COLD-8821" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Destination Pharmacy / Clinic *</label>
+                <input type="text" ng-model="dispatchModal.destination" placeholder="e.g. CityCare Central Pharmacy" required>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" ng-click="closeDispatchModal()" style="background:#94a3b8; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    Cancel
+                </button>
+                <button type="button" ng-click="confirmDispatch()" style="background:#1976d2; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    Dispatch Shipment →
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Scripts -->
+<script src="js/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/controllers.js"></script>
+
+</body>
+</html>

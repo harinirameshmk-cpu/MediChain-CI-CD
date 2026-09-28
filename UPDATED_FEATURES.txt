@@ -1,0 +1,18 @@
+MediChain Frontend + Customer/Admin Update
+
+1. Added Customer as a real account role.
+2. Customer registration and login are supported.
+3. Customer dashboard is separate and read-only.
+4. Customer can search available medicines by medicine name or Batch ID.
+5. Customer can click Verify to check the batch against the blockchain/hash chain.
+6. Customer dashboard shows medicine details, supply-chain stages, temperature/expiry status, and cryptographic block hashes.
+7. Admin registration remains supported as a separate account role.
+8. Login/Register pages now contain Customer and Admin roles with cleaner text labels.
+9. Frontend styling was refined to a simple, elegant, consistent system font and cleaner spacing, borders, buttons, cards, and tables.
+10. Fixed backend route imports so Express mounts routes only after MongoDB is connected.
+11. Customer API routes are protected by authentication and customer/admin role checks.
+
+IMPORTANT:
+- The .env file is intentionally not included in this ZIP.
+- Copy your existing working .env into the project root after extracting.
+- Do not share your MongoDB password.

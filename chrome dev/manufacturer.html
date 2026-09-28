@@ -1,0 +1,1274 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>MediChain - Manufacturer Dashboard</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     NAVBAR
+     ===================================================== -->
+
+<header class="dashboard-navbar">
+
+    <div class="dashboard-logo">
+
+        <div class="dashboard-logo-icon">
+            +
+        </div>
+
+        <div>
+            <strong>MediChain</strong>
+
+            <small>
+                Smart Medicine Supply Chain
+            </small>
+        </div>
+
+    </div>
+
+    <div class="dashboard-user">
+
+        <span id="userName">
+            Manufacturer
+        </span>
+
+        <span class="role-badge">
+            MANUFACTURER
+        </span>
+
+        <button onclick="logout()">
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     MAIN
+     ===================================================== -->
+
+<main class="manufacturer-container">
+
+    <!-- PAGE HEADER -->
+
+    <section class="page-header">
+
+        <div>
+
+            <span class="page-tag">
+                MANUFACTURER PORTAL
+            </span>
+
+            <h1>
+                Medicine Management
+            </h1>
+
+            <p>
+                Register and manage medicine batches
+                in the MediChain supply chain.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         SUMMARY CARDS
+         ================================================= -->
+
+    <section class="manufacturer-summary">
+
+        <div class="summary-card">
+
+            <div class="summary-icon">
+                💊
+            </div>
+
+            <div>
+
+                <span>
+                    Total Medicines
+                </span>
+
+                <strong id="totalMedicines">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-icon">
+                📦
+            </div>
+
+            <div>
+
+                <span>
+                    Total Batches
+                </span>
+
+                <strong id="totalBatches">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-icon">
+                ✓
+            </div>
+
+            <div>
+
+                <span>
+                    Active Batches
+                </span>
+
+                <strong id="activeBatches">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         REGISTER MEDICINE
+         ================================================= -->
+
+    <section class="manufacturer-card">
+
+        <div class="section-title">
+
+            <div>
+
+                <h2>
+                    Register New Medicine
+                </h2>
+
+                <p>
+                    Enter the medicine and batch details.
+                </p>
+
+            </div>
+
+            <span class="secure-badge">
+                🔐 Secure Registration
+            </span>
+
+        </div>
+
+
+        <form id="medicineForm"
+              onsubmit="registerMedicine(event)">
+
+            <div class="form-grid">
+
+
+                <!-- MEDICINE NAME -->
+
+                <div class="form-group">
+
+                    <label>
+                        Medicine Name *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="medicineName"
+                        placeholder="Example: Paracetamol"
+                        required>
+
+                    <small
+                        id="medicineNameError"
+                        class="field-error">
+                    </small>
+
+                </div>
+
+
+                <!-- BATCH ID -->
+
+                <div class="form-group">
+
+                    <label>
+                        Batch ID *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="batchId"
+                        placeholder="Example: BATCH001"
+                        required>
+
+                    <small
+                        id="batchIdError"
+                        class="field-error">
+                    </small>
+
+                </div>
+
+
+                <!-- QUANTITY -->
+
+                <div class="form-group">
+
+                    <label>
+                        Quantity *
+                    </label>
+
+                    <input
+                        type="number"
+                        id="quantity"
+                        placeholder="Enter quantity"
+                        min="1"
+                        required>
+
+                </div>
+
+
+                <!-- MANUFACTURE DATE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Manufacture Date *
+                    </label>
+
+                    <input
+                        type="date"
+                        id="manufactureDate"
+                        required>
+
+                </div>
+
+
+                <!-- EXPIRY DATE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Expiry Date *
+                    </label>
+
+                    <input
+                        type="date"
+                        id="expiryDate"
+                        required>
+
+                    <small
+                        id="expiryError"
+                        class="field-error">
+                    </small>
+
+                </div>
+
+
+                <!-- MIN TEMPERATURE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Minimum Allowed Temperature (°C) *
+                    </label>
+
+                    <input
+                        type="number"
+                        id="minTemperature"
+                        placeholder="Example: 2"
+                        step="0.1"
+                        required>
+
+                </div>
+
+
+                <!-- MAX TEMPERATURE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Maximum Allowed Temperature (°C) *
+                    </label>
+
+                    <input
+                        type="number"
+                        id="maxTemperature"
+                        placeholder="Example: 8"
+                        step="0.1"
+                        required>
+
+                    <small
+                        id="temperatureError"
+                        class="field-error">
+                    </small>
+
+                </div>
+
+
+                <!-- CURRENT TEMPERATURE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Current Temperature (°C) *
+                    </label>
+
+                    <input
+                        type="number"
+                        id="currentTemperature"
+                        placeholder="Example: 5"
+                        step="0.1"
+                        required>
+
+                    <small
+                        id="currentTemperatureError"
+                        class="field-error">
+                    </small>
+
+                </div>
+
+
+                <!-- MANUFACTURER -->
+
+                <div class="form-group">
+
+                    <label>
+                        Manufacturer Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="manufacturerName"
+                        readonly>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- BUTTON -->
+
+            <div class="form-actions">
+
+                <button
+                    type="reset"
+                    class="secondary-button">
+
+                    Clear
+
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button">
+
+                    ✓ Register Medicine
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- =================================================
+         SUCCESS MESSAGE
+         ================================================= -->
+
+    <div
+        id="successNotification"
+        class="success-notification">
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <div>
+
+            <strong>
+                Medicine Registered Successfully!
+            </strong>
+
+            <p id="successText">
+                Medicine has been added to the supply chain.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         REGISTERED MEDICINES
+         ================================================= -->
+
+    <section class="manufacturer-card">
+
+        <div class="section-title">
+
+            <div>
+
+                <h2>
+                    Registered Medicines
+                </h2>
+
+                <p>
+                    Medicines registered by the manufacturer.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="table-tools">
+
+            <input
+                type="text"
+                id="medicineSearch"
+                placeholder="Search Batch ID or Medicine Name..."
+                onkeyup="displayMedicines()">
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Batch ID
+                        </th>
+
+                        <th>
+                            Medicine
+                        </th>
+
+                        <th>
+                            Quantity
+                        </th>
+
+                        <th>
+                            Manufacture Date
+                        </th>
+
+                        <th>
+                            Expiry Date
+                        </th>
+
+                        <th>
+                            Temperature Range
+                        </th>
+
+                        <th>
+                            Current Temperature
+                        </th>
+
+                        <th>
+                            Temperature Status
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="medicineTableBody">
+
+                </tbody>
+
+            </table>
+
+
+            <!-- EMPTY STATE -->
+
+            <div
+                id="emptyState"
+                class="empty-state">
+
+                <div>
+                    💊
+                </div>
+
+                <h3>
+                    No Medicines Registered
+                </h3>
+
+                <p>
+                    Register your first medicine batch
+                    using the form above.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+
+<script>
+
+
+// ======================================================
+// GET LOGGED-IN USER
+// ======================================================
+
+var loggedInUser =
+    JSON.parse(
+        localStorage.getItem("loggedInUser")
+    );
+
+
+// ======================================================
+// CHECK LOGIN
+// ======================================================
+
+if (!loggedInUser) {
+
+    alert("Please login first.");
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+// ======================================================
+// CHECK ROLE
+// ======================================================
+
+if (
+    loggedInUser &&
+    loggedInUser.role !== "manufacturer"
+) {
+
+    alert(
+        "Access denied. Manufacturer account required."
+    );
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+// ======================================================
+// SHOW USER NAME
+// ======================================================
+
+if (loggedInUser) {
+
+    document.getElementById("userName").innerText =
+        loggedInUser.name;
+
+    document.getElementById("manufacturerName").value =
+        loggedInUser.name;
+
+}
+
+
+// ======================================================
+// GET MEDICINES
+// ======================================================
+
+function getMedicines() {
+
+    return JSON.parse(
+        localStorage.getItem("medicineRecords")
+    ) || [];
+
+}
+
+
+// ======================================================
+// REGISTER MEDICINE
+// ======================================================
+
+function registerMedicine(event) {
+
+    event.preventDefault();
+
+
+    // ==================================================
+    // GET VALUES
+    // ==================================================
+
+    var medicineName =
+        document.getElementById("medicineName")
+        .value.trim();
+
+
+    var batchId =
+        document.getElementById("batchId")
+        .value.trim();
+
+
+    var quantity =
+        document.getElementById("quantity")
+        .value;
+
+
+    var manufactureDate =
+        document.getElementById("manufactureDate")
+        .value;
+
+
+    var expiryDate =
+        document.getElementById("expiryDate")
+        .value;
+
+
+    var minTemperature =
+        parseFloat(
+            document.getElementById("minTemperature")
+            .value
+        );
+
+
+    var maxTemperature =
+        parseFloat(
+            document.getElementById("maxTemperature")
+            .value
+        );
+
+
+    var currentTemperature =
+        parseFloat(
+            document.getElementById("currentTemperature")
+            .value
+        );
+
+
+    // ==================================================
+    // CLEAR ERRORS
+    // ==================================================
+
+    document.getElementById("batchIdError")
+        .innerText = "";
+
+    document.getElementById("expiryError")
+        .innerText = "";
+
+    document.getElementById("temperatureError")
+        .innerText = "";
+
+    document.getElementById("currentTemperatureError")
+        .innerText = "";
+
+
+    // ==================================================
+    // GET EXISTING MEDICINES
+    // ==================================================
+
+    var medicines =
+        getMedicines();
+
+
+    // ==================================================
+    // BATCH VALIDATION
+    // ==================================================
+
+    var duplicateBatch =
+        medicines.some(function(medicine) {
+
+            return (
+                medicine.batchId &&
+                medicine.batchId.toLowerCase() ===
+                batchId.toLowerCase()
+            );
+
+        });
+
+
+    if (duplicateBatch) {
+
+        document.getElementById(
+            "batchIdError"
+        ).innerText =
+            "This Batch ID already exists.";
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // EXPIRY VALIDATION
+    // ==================================================
+
+    if (
+        new Date(expiryDate) <=
+        new Date(manufactureDate)
+    ) {
+
+        document.getElementById(
+            "expiryError"
+        ).innerText =
+            "Expiry date must be after manufacture date.";
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // TEMPERATURE RANGE VALIDATION
+    // ==================================================
+
+    if (
+        minTemperature >=
+        maxTemperature
+    ) {
+
+        document.getElementById(
+            "temperatureError"
+        ).innerText =
+            "Maximum temperature must be greater than minimum temperature.";
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // CURRENT TEMPERATURE VALIDATION
+    // ==================================================
+
+    if (
+        currentTemperature < minTemperature ||
+        currentTemperature > maxTemperature
+    ) {
+
+        document.getElementById(
+            "currentTemperatureError"
+        ).innerText =
+            "Current temperature must be within the allowed temperature range.";
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // CREATE MEDICINE RECORD
+    // ==================================================
+
+    var medicine = {
+
+        id:
+            "MED-" +
+            Date.now(),
+
+        batchId:
+            batchId,
+
+        medicineName:
+            medicineName,
+
+        quantity:
+            Number(quantity),
+
+        manufactureDate:
+            manufactureDate,
+
+        expiryDate:
+            expiryDate,
+
+        minTemperature:
+            minTemperature,
+
+        maxTemperature:
+            maxTemperature,
+
+        currentTemperature:
+            currentTemperature,
+
+        manufacturer:
+            loggedInUser.name,
+
+        manufacturerEmail:
+            loggedInUser.email,
+
+        status:
+            "ACTIVE",
+
+        temperatureStatus:
+            "NORMAL",
+
+        createdAt:
+            new Date().toLocaleString(),
+
+        blockchainStatus:
+            "VERIFIED"
+
+    };
+
+
+    // ==================================================
+    // SAVE MEDICINE
+    // ==================================================
+
+    medicines.push(medicine);
+
+
+    localStorage.setItem(
+        "medicineRecords",
+        JSON.stringify(medicines)
+    );
+
+
+    // ==================================================
+    // SUCCESS MESSAGE
+    // ==================================================
+
+    document.getElementById(
+        "successText"
+    ).innerText =
+        medicineName +
+        " (" +
+        batchId +
+        ") has been successfully registered.";
+
+
+    document.getElementById(
+        "successNotification"
+    ).classList.add("show");
+
+
+    // ==================================================
+    // RESET FORM
+    // ==================================================
+
+    document.getElementById(
+        "medicineForm"
+    ).reset();
+
+
+    document.getElementById(
+        "manufacturerName"
+    ).value =
+        loggedInUser.name;
+
+
+    // ==================================================
+    // REFRESH TABLE
+    // ==================================================
+
+    displayMedicines();
+
+
+    // ==================================================
+    // UPDATE SUMMARY
+    // ==================================================
+
+    updateSummary();
+
+
+    // ==================================================
+    // HIDE SUCCESS MESSAGE
+    // ==================================================
+
+    setTimeout(function() {
+
+        document.getElementById(
+            "successNotification"
+        ).classList.remove("show");
+
+    }, 4000);
+
+}
+
+
+// ======================================================
+// DISPLAY MEDICINES
+// ======================================================
+
+function displayMedicines() {
+
+    var medicines =
+        getMedicines();
+
+
+    var search =
+        document.getElementById(
+            "medicineSearch"
+        ).value.toLowerCase();
+
+
+    var tableBody =
+        document.getElementById(
+            "medicineTableBody"
+        );
+
+
+    var emptyState =
+        document.getElementById(
+            "emptyState"
+        );
+
+
+    tableBody.innerHTML = "";
+
+
+    // ==================================================
+    // ONLY CURRENT MANUFACTURER
+    // ==================================================
+
+    var manufacturerMedicines =
+        medicines.filter(function(medicine) {
+
+            return (
+                medicine.manufacturerEmail ===
+                loggedInUser.email
+            );
+
+        });
+
+
+    // ==================================================
+    // SEARCH
+    // ==================================================
+
+    manufacturerMedicines =
+        manufacturerMedicines.filter(
+            function(medicine) {
+
+                return (
+
+                    medicine.medicineName
+                        .toLowerCase()
+                        .includes(search)
+
+                    ||
+
+                    medicine.batchId
+                        .toLowerCase()
+                        .includes(search)
+
+                );
+
+            }
+        );
+
+
+    // ==================================================
+    // EMPTY STATE
+    // ==================================================
+
+    if (
+        manufacturerMedicines.length === 0
+    ) {
+
+        emptyState.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    emptyState.style.display =
+        "none";
+
+
+    // ==================================================
+    // CREATE TABLE ROWS
+    // ==================================================
+
+    manufacturerMedicines.forEach(
+        function(medicine) {
+
+
+            var row =
+                document.createElement("tr");
+
+
+            // Determine temperature status
+            var currentTemp =
+                Number(medicine.currentTemperature);
+
+            var minTemp =
+                Number(medicine.minTemperature);
+
+            var maxTemp =
+                Number(medicine.maxTemperature);
+
+
+            var temperatureStatus;
+
+
+            if (
+                currentTemp >= minTemp &&
+                currentTemp <= maxTemp
+            ) {
+
+                temperatureStatus =
+                    `<span class="status-active">
+                        ✓ NORMAL
+                     </span>`;
+
+            } else {
+
+                temperatureStatus =
+                    `<span class="status-danger">
+                        ⚠ ALERT
+                     </span>`;
+
+            }
+
+
+            row.innerHTML = `
+
+                <td>
+
+                    <strong>
+                        ${medicine.batchId}
+                    </strong>
+
+                </td>
+
+
+                <td>
+
+                    <strong>
+                        ${medicine.medicineName}
+                    </strong>
+
+                </td>
+
+
+                <td>
+
+                    ${medicine.quantity}
+
+                </td>
+
+
+                <td>
+
+                    ${formatDate(
+                        medicine.manufactureDate
+                    )}
+
+                </td>
+
+
+                <td>
+
+                    ${formatDate(
+                        medicine.expiryDate
+                    )}
+
+                </td>
+
+
+                <td>
+
+                    ${medicine.minTemperature}
+                    °C -
+                    ${medicine.maxTemperature}
+                    °C
+
+                </td>
+
+
+                <td>
+
+                    <strong>
+                        ${medicine.currentTemperature}°C
+                    </strong>
+
+                </td>
+
+
+                <td>
+
+                    ${temperatureStatus}
+
+                </td>
+
+
+                <td>
+
+                    <span class="status-active">
+
+                        ✓ ACTIVE
+
+                    </span>
+
+                </td>
+
+            `;
+
+
+            tableBody.appendChild(row);
+
+        }
+    );
+
+}
+
+
+// ======================================================
+// UPDATE SUMMARY
+// ======================================================
+
+function updateSummary() {
+
+    var medicines =
+        getMedicines();
+
+
+    var manufacturerMedicines =
+        medicines.filter(function(medicine) {
+
+            return (
+                medicine.manufacturerEmail ===
+                loggedInUser.email
+            );
+
+        });
+
+
+    document.getElementById(
+        "totalMedicines"
+    ).innerText =
+        manufacturerMedicines.length;
+
+
+    document.getElementById(
+        "totalBatches"
+    ).innerText =
+        manufacturerMedicines.length;
+
+
+    var active =
+        manufacturerMedicines.filter(
+            function(medicine) {
+
+                return (
+                    medicine.status ===
+                    "ACTIVE"
+                );
+
+            }
+        );
+
+
+    document.getElementById(
+        "activeBatches"
+    ).innerText =
+        active.length;
+
+}
+
+
+// ======================================================
+// FORMAT DATE
+// ======================================================
+
+function formatDate(dateString) {
+
+    if (!dateString) {
+
+        return "-";
+
+    }
+
+
+    var date =
+        new Date(dateString);
+
+
+    return date.toLocaleDateString(
+        "en-GB"
+    );
+
+}
+
+
+// ======================================================
+// LOGOUT
+// ======================================================
+
+function logout() {
+
+    localStorage.removeItem(
+        "loggedInUser"
+    );
+
+    localStorage.removeItem(
+        "loggedInRole"
+    );
+
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+// ======================================================
+// INITIAL LOAD
+// ======================================================
+
+displayMedicines();
+
+updateSummary();
+
+
+</script>
+
+</body>
+
+</html>

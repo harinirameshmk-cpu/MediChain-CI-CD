@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Register</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [ng-cloak] { display: none !important; }
+        .register-role-item {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .register-role-item:hover, .register-role-item.selected {
+            background: #e0edff !important;
+            border-color: #1976d2 !important;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body ng-controller="RegisterController">
+
+<header class="auth-navbar">
+    <a href="index.html" class="auth-logo">
+        <div class="auth-logo-icon">+</div>
+        <div>
+            <strong>MediChain</strong>
+            <small>Smart Medicine Supply Chain</small>
+        </div>
+    </a>
+
+    <div class="auth-nav-right">
+        <span>Already have an account?</span>
+        <a href="login.html" class="auth-nav-login">Login</a>
+    </div>
+</header>
+
+<main class="register-main">
+    <!-- LEFT ROLE CARDS SECTION -->
+    <section class="register-info">
+        <span class="register-tag">JOIN MEDICHAIN</span>
+        <h1>
+            Connect Your Role<br>
+            <span>To The Supply Chain</span>
+        </h1>
+        <p>
+            Create your account and access your role-based medicine supply chain dashboard.
+        </p>
+
+        <div class="register-role-list">
+            <div class="register-role-item" ng-class="{'selected': user.role === 'manufacturer'}" ng-click="selectRole('manufacturer')">
+                <div class="role-small-icon">M</div>
+                <div>
+                    <strong>Manufacturer</strong>
+                    <small>Create and register medicines</small>
+                </div>
+            </div>
+
+            <div class="register-role-item" ng-class="{'selected': user.role === 'distributor'}" ng-click="selectRole('distributor')">
+                <div class="role-small-icon">D</div>
+                <div>
+                    <strong>Distributor</strong>
+                    <small>Manage medicine distribution</small>
+                </div>
+            </div>
+
+            <div class="register-role-item" ng-class="{'selected': user.role === 'transporter'}" ng-click="selectRole('transporter')">
+                <div class="role-small-icon">T</div>
+                <div>
+                    <strong>Transporter</strong>
+                    <small>Manage shipment and temperature</small>
+                </div>
+            </div>
+
+            <div class="register-role-item" ng-class="{'selected': user.role === 'pharmacy'}" ng-click="selectRole('pharmacy')">
+                <div class="role-small-icon">P</div>
+                <div>
+                    <strong>Pharmacy</strong>
+                    <small>Manage received medicines</small>
+                </div>
+            </div>
+
+            <div class="register-role-item" ng-class="{'selected': user.role === 'customer'}" ng-click="selectRole('customer')">
+                <div class="role-small-icon">C</div>
+                <div>
+                    <strong>Customer</strong>
+                    <small>Search and verify medicines</small>
+                </div>
+            </div>
+
+            <div class="register-role-item" ng-class="{'selected': user.role === 'admin'}" ng-click="selectRole('admin')">
+                <div class="role-small-icon">A</div>
+                <div>
+                    <strong>Admin</strong>
+                    <small>Monitor complete supply chain</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RIGHT REGISTRATION FORM -->
+    <section class="register-form-area">
+        <div class="register-card">
+            <div class="register-heading">
+                <div class="register-user-icon">✨</div>
+                <h2>Create Account</h2>
+                <p>Register your MediChain account</p>
+            </div>
+
+            <form ng-submit="handleRegister()" novalidate>
+                <!-- NAME -->
+                <div class="register-input">
+                    <label for="regName">Full Name / Organization</label>
+                    <input type="text" id="regName" ng-model="user.name" placeholder="Enter full name or organization" required>
+                </div>
+
+                <!-- EMAIL -->
+                <div class="register-input">
+                    <label for="regEmail">Email Address</label>
+                    <input type="email" id="regEmail" ng-model="user.email" placeholder="Enter your email" required autocomplete="email">
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="register-input">
+                    <label for="regPassword">Password (Min. 8 characters)</label>
+                    <input type="password" id="regPassword" ng-model="user.password" placeholder="Create a strong password" required autocomplete="new-password">
+                </div>
+
+                <!-- CONFIRM PASSWORD -->
+                <div class="register-input">
+                    <label for="regConfirmPassword">Confirm Password</label>
+                    <input type="password" id="regConfirmPassword" ng-model="user.confirmPassword" placeholder="Confirm your password" required autocomplete="new-password">
+                </div>
+
+                <!-- ROLE -->
+                <div class="register-input">
+                    <label for="regRole">Select Your Role</label>
+                    <select id="regRole" ng-model="user.role" required>
+                        <option value="">Select Your Role</option>
+                        <option value="manufacturer">Manufacturer</option>
+                        <option value="distributor">Distributor</option>
+                        <option value="transporter">Transporter</option>
+                        <option value="pharmacy">Pharmacy</option>
+                        <option value="customer">Customer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <!-- NOTIFICATIONS / ALERTS -->
+                <div class="success-message" ng-if="successMessage" ng-cloak>
+                    {{successMessage}}
+                </div>
+                <div class="error-message" ng-if="errorMessage" ng-cloak>
+                    {{errorMessage}}
+                </div>
+
+                <button type="submit" id="regBtn" class="register-button" ng-disabled="isLoading">
+                    <span ng-if="!isLoading">Create Account →</span>
+                    <span ng-if="isLoading" ng-cloak>Creating Account...</span>
+                </button>
+
+                <div class="register-login-link">
+                    Already have an account?
+                    <a href="login.html">Login here</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer class="auth-footer">
+    <span>© 2026 MediChain</span>
+    <span>Secure • Transparent • Traceable</span>
+</footer>
+
+<!-- AngularJS Framework & Scripts -->
+<script src="js/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/controllers.js"></script>
+
+</body>
+</html>

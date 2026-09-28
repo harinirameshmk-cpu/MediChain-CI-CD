@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="medicineApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Customer Verification</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+      [ng-cloak]{display:none!important}
+      .customer-shell{max-width:1180px;margin:0 auto;padding:28px 24px 56px}
+      .customer-hero{background:#fff;border:1px solid #e5eaf0;border-radius:18px;padding:30px 32px;margin-bottom:20px;display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+      .customer-hero h1{background:none;color:#172033;padding:0;margin:7px 0 8px;box-shadow:none;font-size:30px}
+      .customer-hero p{color:#667085;line-height:1.6;max-width:680px}
+      .customer-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;color:#2563eb}
+      .customer-user{display:flex;align-items:center;gap:10px;color:#475467;font-size:13px;white-space:nowrap}
+      .customer-avatar{width:38px;height:38px;border-radius:50%;background:#eff6ff;color:#2563eb;display:grid;place-items:center;font-weight:700}
+      .customer-search{background:#fff;border:1px solid #e5eaf0;border-radius:18px;padding:24px;margin-bottom:20px}
+      .customer-search h2,.customer-section h2{font-size:18px;color:#172033;margin:0 0 6px}
+      .customer-search p{font-size:13px;color:#667085;margin-bottom:18px}
+      .search-row{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+      .customer-field label{display:block;font-size:12px;font-weight:600;color:#475467;margin-bottom:7px}
+      .customer-field input{width:100%;height:44px;border:1px solid #d8dee8;border-radius:10px;padding:0 13px;font-size:14px;outline:none;background:#fbfcfe}
+      .customer-field input:focus{border-color:#7aa7e8;box-shadow:0 0 0 3px #eff6ff}
+      .customer-btn{height:44px;border:0;border-radius:10px;padding:0 18px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
+      .customer-btn.secondary{background:#f2f4f7;color:#344054;border:1px solid #dfe3ea}
+      .customer-btn:disabled{opacity:.6;cursor:not-allowed}
+      .customer-message{padding:12px 14px;border-radius:10px;font-size:13px;margin-top:14px}
+      .customer-error{background:#fff1f2;color:#b42318;border:1px solid #fecdd3}
+      .customer-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+      .medicine-option{background:#fff;border:1px solid #e5eaf0;border-radius:14px;padding:17px;display:flex;justify-content:space-between;gap:15px;align-items:center}
+      .medicine-option:hover{border-color:#b9c9e3;box-shadow:0 5px 18px rgba(16,24,40,.06)}
+      .medicine-name{font-weight:700;color:#172033;margin-bottom:5px}.medicine-meta{font-size:12px;color:#667085;line-height:1.7}
+      .verify-link{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:9px;padding:9px 12px;font-weight:600;cursor:pointer;white-space:nowrap}
+      .customer-section{background:#fff;border:1px solid #e5eaf0;border-radius:18px;padding:24px;margin-top:20px}
+      .verification-banner{padding:18px;border-radius:13px;margin:18px 0;display:flex;gap:13px;align-items:flex-start}
+      .verification-banner.valid{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}.verification-banner.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}.verification-banner.danger{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}
+      .verification-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.75);font-weight:800}
+      .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+      .detail-item{background:#f8fafc;border:1px solid #edf0f4;border-radius:11px;padding:13px}.detail-item span{display:block;color:#667085;font-size:11px;margin-bottom:5px}.detail-item strong{color:#172033;font-size:13px;word-break:break-word}
+      .timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}.timeline-step{border:1px solid #e5eaf0;border-radius:12px;padding:13px;text-align:center;background:#fbfcfe}.timeline-dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;background:#eaf2ff;color:#2563eb;font-weight:700}.timeline-step small{color:#667085;font-size:11px}.timeline-step strong{display:block;color:#344054;font-size:12px;margin-top:3px}
+      .hash-card{border:1px solid #e5eaf0;border-radius:12px;padding:13px;margin-top:10px;background:#fbfcfe}.hash-card strong{color:#2563eb;font-size:12px}.hash-line{font-family:Consolas,monospace;font-size:11px;color:#667085;word-break:break-all;margin-top:5px}
+
+      .qr-scanner-card{background:#f8fbff;border:1px solid #dbeafe;border-radius:14px;padding:18px;margin-top:16px}.qr-scanner-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.qr-scanner-head h3{margin:0;color:#172033;font-size:16px}.qr-scanner-head p{margin:5px 0 0;color:#667085;font-size:12px}.qr-scanner-box{max-width:420px;margin:16px auto 8px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #dbe3ef}.qr-scan-result{font-size:12px;color:#475467;text-align:center;margin-top:8px}.scan-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+      @media(max-width:800px){.customer-hero{flex-direction:column}.search-row,.customer-grid,.detail-grid,.timeline{grid-template-columns:1fr}.customer-shell{padding:18px 14px}}
+    </style>
+</head>
+<body ng-controller="CustomerController">
+<header class="dashboard-navbar customer-navbar">
+  <div class="dashboard-logo"><a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px"><div class="dashboard-logo-icon">M</div><div><strong>MediChain</strong><small>Customer Verification</small></div></a></div>
+  <div class="dashboard-user"><div class="customer-avatar">C</div><span>{{currentUser.name}}</span><span class="role-badge">CUSTOMER</span><button type="button" ng-click="logout()" class="customer-btn secondary" style="height:36px">Logout</button></div>
+</header>
+
+<main class="customer-shell">
+  <section class="customer-hero">
+    <div><span class="customer-kicker">MEDICINE AUTHENTICITY</span><h1>Verify a medicine before use</h1><p>Search medicines that have reached a pharmacy and review their recorded supply-chain history. Blockchain verification checks the cryptographic record for the selected batch.</p></div>
+    <div class="customer-user"><div class="customer-avatar">C</div><div><strong>{{currentUser.name}}</strong><br><span>Customer account</span></div></div>
+  </section>
+
+  <section class="customer-search">
+    <h2>Find a medicine</h2><p>Enter the medicine name or Batch ID. You can also choose a medicine from the available list below.</p>
+    <div class="search-row">
+      <div class="customer-field"><label>Medicine name</label><input type="text" ng-model="search.medicineName" placeholder="e.g. Paracetamol 500mg"></div>
+      <div class="customer-field"><label>Batch ID</label><input type="text" ng-model="search.batchId" placeholder="e.g. MED001"></div>
+      <div style="display:flex;gap:8px"><button class="customer-btn" ng-click="searchAvailable()" ng-disabled="loadingMedicines">{{loadingMedicines ? 'Searching...' : 'Search'}}</button><button class="customer-btn secondary" ng-click="clearVerification()">Clear</button></div>
+    </div>
+    <div class="customer-message customer-error" ng-if="errorMessage" ng-cloak>{{errorMessage}}</div>
+
+    <div class="qr-scanner-card">
+      <div class="qr-scanner-head">
+        <div><h3>📷 Scan Medicine QR Code</h3><p>Scan the official MediChain QR to open and verify the medicine batch.</p></div>
+        <button type="button" class="customer-btn" ng-click="toggleQrScanner()">{{qrScannerOpen ? 'Stop Scanner' : 'Open Scanner'}}</button>
+      </div>
+      <div ng-if="qrScannerOpen" ng-cloak>
+        <div id="qr-reader" class="qr-scanner-box"></div>
+        <div class="qr-scan-result" ng-if="qrScanMessage">{{qrScanMessage}}</div>
+        <div class="scan-actions"><button type="button" class="customer-btn secondary" ng-click="stopQrScanner()">Stop Camera</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="customer-section" ng-if="!result">
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:15px"><div><h2>Available medicines</h2><p style="color:#667085;font-size:13px">Medicines recorded as received by a pharmacy.</p></div><span style="font-size:12px;color:#667085">{{availableMedicines.length}} found</span></div>
+    <div class="customer-grid">
+      <div class="medicine-option" ng-repeat="m in availableMedicines track by m.batchId">
+        <div><div class="medicine-name">{{m.medicineName}}</div><div class="medicine-meta">Batch: {{m.batchId}}<br>Manufacturer: {{m.manufacturer || '-'}}<br>Expiry: {{m.expiryDate || '-'}}</div></div>
+        <button class="verify-link" ng-click="verifyMedicine(m.batchId,m.medicineName)">Verify</button>
+      </div>
+    </div>
+    <div ng-if="!loadingMedicines && availableMedicines.length===0" style="padding:30px;text-align:center;color:#98a2b3">No medicines are currently available for customer verification.</div>
+  </section>
+
+  <section class="customer-section" ng-if="result" ng-cloak>
+    <div class="verification-banner" ng-class="{'valid': result.isVerified && result.verdict==='VERIFIED','warn': result.verdict==='EXPIRED' || result.verdict==='TEMPERATURE_ANOMALY','danger': !result.isVerified && result.verdict!=='EXPIRED' && result.verdict!=='TEMPERATURE_ANOMALY'}">
+      <div class="verification-icon">{{result.isVerified ? '✓' : '!'}}</div><div><strong>{{result.title || result.badge}}</strong><div style="font-size:13px;margin-top:4px">{{result.message}}</div><div style="font-size:12px;margin-top:7px"><strong>Blockchain:</strong> {{result.blockchainStatus}} &nbsp; <strong>Temperature:</strong> {{result.temperatureStatus}} &nbsp; <strong>Expiry:</strong> {{result.expiryStatus}}</div></div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item"><span>Medicine</span><strong>{{result.medicine.medicineName}}</strong></div>
+      <div class="detail-item"><span>Batch ID</span><strong>{{result.medicine.batchId}}</strong></div>
+      <div class="detail-item"><span>Manufacturer</span><strong>{{result.medicine.manufacturer || '-'}}</strong></div>
+      <div class="detail-item"><span>Quantity</span><strong>{{result.medicine.quantity | number}}</strong></div>
+      <div class="detail-item"><span>Manufacturing date</span><strong>{{result.medicine.manufacturingDate || '-'}}</strong></div>
+      <div class="detail-item"><span>Expiry date</span><strong>{{result.medicine.expiryDate || '-'}}</strong></div>
+      <div class="detail-item"><span>Safe temperature</span><strong>{{result.medicine.minTemperature}}°C – {{result.medicine.maxTemperature}}°C</strong></div>
+      <div class="detail-item"><span>Pharmacy</span><strong>{{result.medicine.pharmacy || '-'}}</strong></div>
+      <div class="detail-item"><span>Certificate</span><strong>{{result.medicine.certificate || '-'}}</strong></div>
+    </div>
+
+    <h2 style="margin-top:28px">Supply-chain history</h2>
+    <div class="timeline">
+      <div class="timeline-step"><div class="timeline-dot">1</div><small>Stage</small><strong>Manufacturer</strong></div>
+      <div class="timeline-step"><div class="timeline-dot">2</div><small>Stage</small><strong>Distributor</strong></div>
+      <div class="timeline-step"><div class="timeline-dot">3</div><small>Stage</small><strong>Transporter</strong></div>
+      <div class="timeline-step"><div class="timeline-dot">4</div><small>Stage</small><strong>Pharmacy</strong></div>
+      <div class="timeline-step"><div class="timeline-dot">5</div><small>Proof</small><strong>Blockchain verified</strong></div>
+    </div>
+
+    <h2 style="margin-top:28px">Blockchain record</h2>
+    <p style="color:#667085;font-size:13px">Each transaction is linked to the previous block by a cryptographic hash.</p>
+    <div class="hash-card" ng-repeat="b in result.batchBlocks"><strong>Block #{{b.index}} · {{b.transactionType}}</strong><div class="hash-line">Hash: {{b.hash}}</div><div class="hash-line">Previous: {{b.previousHash}}</div><div style="font-size:11px;color:#98a2b3;margin-top:5px">{{b.timestamp | dateTimeFormat}}</div></div>
+
+    <div style="margin-top:18px"><button class="customer-btn secondary" ng-click="clearVerification()">Back to available medicines</button></div>
+  </section>
+</main>
+<footer class="auth-footer"><span>© 2026 MediChain</span><span>Secure · Transparent · Traceable</span></footer>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="js/angular.min.js"></script><script src="js/app.js"></script><script src="js/services.js"></script><script src="js/factories.js"></script><script src="js/filters.js"></script><script src="js/controllers.js"></script>
+</body></html>
